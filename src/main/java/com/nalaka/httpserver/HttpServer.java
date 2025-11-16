@@ -1,47 +1,29 @@
 package com.nalaka.httpserver;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.stream.Stream;
+import java.io.IOException;
+
+import org.slf4j.LoggerFactory;
 
 import com.nalaka.httpserver.config.Configuration;
 import com.nalaka.httpserver.config.ConfigurationManager;
+import com.nalaka.httpserver.core.ServerListenerThread;
 
 public class HttpServer {
 
+    public final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(HttpServer.class);
+
     public static void main(String[] args) {
+        LOGGER.info("Server starting....");
         ConfigurationManager.getInstance().loadConfigurationFile("src/main/resources/http.json");
         Configuration conf = ConfigurationManager.getInstance().getCurrentConfiguration();
         System.out.println(conf.getPort());
 
-        try {
-            ServerSocket serverSocket = new ServerSocket(conf.getPort());
-            Socket socket = serverSocket.accept();
-
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
-
-            String html = "<html><head></head><body>Hello world</body></html>";
-
-            final String CRLF = "\n\r";
-
-            String response
-                    = "HTTP/1.1 200 OK" + CRLF
-                    + "Content-Length" + html.getBytes().length + CRLF
-                    + CRLF
-                    + html
-                    + CRLF + CRLF;
-
-            outputStream.write(response.getBytes());
-
-            inputStream.close();
-            outputStream.close();
-            socket.close();
-            serverSocket.close();
-        } catch (Exception e) {
+        try { 
+            ServerListenerThread serverListenerThread = new ServerListenerThread(conf.getPort(),conf.getWebroot());
+        } catch (IOException e) {
+            // TODO: handle exception
             e.printStackTrace();
         }
+
     }
 }
