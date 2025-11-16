@@ -1,5 +1,7 @@
 package com.nalaka.httpserver.core;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,10 +21,15 @@ public class HttpConnectionWorkerThread extends Thread {
         InputStream inputStream = null;
         OutputStream outputStream = null;
 
+
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-    
+        int _byte ;
+        while((_byte = inputStream.read())>=0){
+            System.out.print((char)_byte);
+        }
+
             String html = "<html><head></head><body>Hello world</body></html>";
     
             final String CRLF = "\n\r";

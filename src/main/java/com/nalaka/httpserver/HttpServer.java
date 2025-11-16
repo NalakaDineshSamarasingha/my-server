@@ -20,6 +20,7 @@ public class HttpServer {
 
         try { 
             ServerListenerThread serverListenerThread = new ServerListenerThread(conf.getPort(),conf.getWebroot());
+            serverListenerThread.start();
         } catch (IOException e) {
             // TODO: handle exception
             e.printStackTrace();
