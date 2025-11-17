@@ -1,5 +1,10 @@
 package com.nalaka.httpserver.core;
 
+import com.nalaka.httpserver.core.io.WebRootHandler;
+import com.nalaka.httpserver.core.io.WebRootNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,13 +13,18 @@ import java.net.Socket;
 
 public class ServerListenerThread extends Thread {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(ServerListenerThread.class);
+
     private int port;
     private String webroot;
     private ServerSocket serverSocket;
 
-    public ServerListenerThread(int port, String webroot) throws IOException {
+    private WebRootHandler webRootHandler;
+
+    public ServerListenerThread(int port, String webroot) throws IOException, WebRootNotFoundException {
         this.port = port;
         this.webroot = webroot;
+        this.webRootHandler = new WebRootHandler(webroot);
         this.serverSocket = new ServerSocket(this.port);
     }
 
@@ -22,20 +32,26 @@ public class ServerListenerThread extends Thread {
     public void run() {
 
         try {
-            while (serverSocket.isBound() && !serverSocket.isClosed()) {
+
+            while ( serverSocket.isBound() && !serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
 
-                HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket);
+                LOGGER.info(" * Connection accepted: " + socket.getInetAddress());
+
+                HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket, webRootHandler);
                 workerThread.start();
+
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally{
-            if(serverSocket!=null){
+
+        } catch (IOException e) {
+            LOGGER.error("Problem with setting socket", e);
+        } finally {
+            if (serverSocket!=null) {
                 try {
                     serverSocket.close();
-                } catch (Exception e) {}
+                } catch (IOException e) {}
             }
         }
+
     }
 }
